@@ -22,11 +22,20 @@ class CameraSystem:
         self.lookahead_dist = lookahead_dist
         self.follow_speed   = follow_speed
         self.trauma_decay   = trauma_decay
+        self._lock_x: float | None = None # None = free scroll
 
     def on_attach(self, bus) -> None:
+        bus.on("camera:lock", self._on_lock)
+        bus.on("camera:unlock", self._on_unlock)
         bus.on("damage:taken", self._on_damage)
         bus.on("object:died",  self._on_death)
         self._camera: Camera | None = None
+
+    def _on_lock(self, payload) -> None:
+        self._lock_x = payload["limit_x"]
+        
+    def _on_unlock(self, payload) -> None:
+        self._lock_x = None
 
     def _on_damage(self, payload) -> None:
         if self._camera and payload.get("target") and \
@@ -62,3 +71,7 @@ class CameraSystem:
 
         camera.clamp_to_bounds()
         camera.apply_shake(dt, self.trauma_decay)
+        
+        # Enforce scroll lock
+        if self._lock_x is not None:
+            camera.position.x = min(camera.position.x, self._lock_x)
