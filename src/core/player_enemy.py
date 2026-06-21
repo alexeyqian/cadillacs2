@@ -150,10 +150,10 @@ class Player(Character):
             self._animation.play("die")
             return
         if self._combat.is_attacking:
-            return  # CombatComponent drives attack animation
+            return
         if not self._physics.is_grounded:
             self._animation.play("jump")
-        elif abs(self._physics.velocity.x) > 1.0:
+        elif abs(self._physics.velocity.x) > 1.0 or abs(self._physics.velocity.y) > 1.0:
             self._animation.play("walk")
         else:
             self._animation.play("idle")
@@ -166,12 +166,12 @@ class Player(Character):
         self.move(Vec2(h, v))
         if self.input.is_action_just_pressed("jump"):
             self.jump()
-        if self.input.is_action_just_pressed("attack_light"):
-            self.attack("light")
-        if self.input.is_action_just_pressed("attack_heavy"):
-            self.attack("heavy")
-        if self.input.is_action_just_pressed("use_item"):
-            self.inventory.use_item("health_potion")
+        if self.input.is_action_just_pressed("attack"):
+            # Combo chain: light on first press, heavy after 2 lights
+            if self._combat.combo_count >= 2:
+                self.attack("heavy")
+            else:
+                self.attack("light")
 
     def grant_xp(self, amount: int) -> None:
         self._experience.add_xp(amount)

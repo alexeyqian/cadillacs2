@@ -104,29 +104,35 @@ class HealthComponent(ComponentBase):
 # ─────────────────────────────────────────────
 
 class PhysicsComponent(ComponentBase):
-    """Per-entity physics state. PhysicsSystem does resolution."""
+    """
+    2.5D physics state. PhysicsSystem does all integration.
+
+    Axes:
+        velocity.x / position.x  — horizontal (left/right)
+        velocity.y / position.y  — depth (away/toward camera, 0=back 120=front)
+        vz        / z            — jump height (0 = on ground, gravity pulls back)
+    """
 
     def __init__(self) -> None:
-        self.velocity: Vec2 = Vec2()
-        self.gravity: float = 980.0
-        self.max_fall_speed: float = 1200.0
-        self.is_grounded: bool = False
-        self.friction: float = 0.18
-        self.immovable: bool = False
-        self.on_landed: Callable[[], None] | None = None
-        self.on_fell: Callable[[], None] | None = None
+        self.velocity: Vec2    = Vec2()   # x=horizontal, y=depth
+        self.vz:       float   = 0.0     # upward jump velocity
+        self.z:        float   = 0.0     # current jump height (0 = grounded)
+        self.prev_z:   float   = 0.0     # snapshot for render interpolation
+        self.jump_gravity: float = 980.0
+        self.friction: float   = 0.18
+        self.immovable: bool   = False
+
+    @property
+    def is_grounded(self) -> bool:
+        return self.z <= 0.0
 
     def update(self, dt: float) -> None:
-        pass  # PhysicsSystem owns all integration; this component holds state only
-
-    def apply_impulse(self, impulse: Vec2) -> None:
-        self.velocity.x += impulse.x
-        self.velocity.y += impulse.y
+        pass  # PhysicsSystem owns all integration
 
     def apply_knockback(self, knockback: Vec2) -> None:
+        """knockback.x = horizontal push; knockback.y magnitude → upward vz."""
         self.velocity.x = knockback.x
-        self.velocity.y = knockback.y
-        self.is_grounded = False
+        self.vz = abs(knockback.y)
 
 
 # ─────────────────────────────────────────────

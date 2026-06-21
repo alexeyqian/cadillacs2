@@ -167,14 +167,14 @@ class Character(GameObject):
             return
         speed = self._stats.get("move_speed")
         self._physics.velocity.x = direction.x * speed
+        self._physics.velocity.y = direction.y * speed * 0.6  # depth movement
         if direction.x != 0:
             self._animation.set_facing(direction.x > 0)
 
     def jump(self) -> None:
         if not self.is_alive or not self.is_grounded:
             return
-        self._physics.velocity.y = -self._stats.get("jump_force")
-        self._physics.is_grounded = False
+        self._physics.vz = self._stats.get("jump_force")
 
     def attack(self, attack_id: str) -> bool:
         return self._combat.start_attack(attack_id)

@@ -1,85 +1,57 @@
 """
 systems/physics_system.py
 ==========================
-Integrates velocity, applies gravity and friction, resolves platform collisions.
-PhysicsComponent holds state only; all logic lives here.
-Called at exactly 60 Hz (FIXED_DT) by GameSession.update().
+2.5D physics: horizontal + depth movement, jump arc on Z axis.
+No gravity on Y — Y is depth into the screen, clamped to the walkable strip.
+Gravity only acts on Z (jump height), pulling it back to 0 (ground level).
 """
 
 from __future__ import annotations
 
 from core.game_object import Scene
 from core.components import PhysicsComponent
-from core.primitives import Vec2, Rect2
+from core.primitives import Vec2
 
 
 class PhysicsSystem:
 
-    def update(self, dt: float, scene: Scene) -> None:
-        platforms = scene.find_by_tag("platform")
-
+    def update(
+        self,
+        dt: float,
+        scene: Scene,
+        y_min: float = 0.0,
+        y_max: float = 120.0,
+    ) -> None:
         for obj in scene.all_objects():
             phys = obj.get_component(PhysicsComponent)
             if phys is None or not obj.active or phys.immovable:
                 continue
 
-            # Snapshot current position for render interpolation
+            # Snapshot positions for render interpolation
             obj.prev_position = Vec2(obj.position.x, obj.position.y)
+            phys.prev_z       = phys.z
 
-            # Gravity (only while airborne)
-            if not phys.is_grounded:
-                phys.velocity.y = min(
-                    phys.velocity.y + phys.gravity * dt,
-                    phys.max_fall_speed,
-                )
+            grounded = phys.is_grounded
 
-            # Horizontal friction (only while grounded)
-            if phys.is_grounded:
-                phys.velocity.x *= 1.0 - phys.friction
+            # Friction on X and Y depth (only while on ground)
+            if grounded:
+                damp = 1.0 - phys.friction
+                phys.velocity.x *= damp
+                phys.velocity.y *= damp
                 if abs(phys.velocity.x) < 0.5:
                     phys.velocity.x = 0.0
+                if abs(phys.velocity.y) < 0.5:
+                    phys.velocity.y = 0.0
 
-            # Integrate velocity → position
+            # Integrate horizontal and depth
             obj.position.x += phys.velocity.x * dt
             obj.position.y += phys.velocity.y * dt
+            obj.position.y  = max(y_min, min(y_max, obj.position.y))
 
-            # Platform resolution
-            was_grounded    = phys.is_grounded
-            phys.is_grounded = False
-
-            for platform in platforms:
-                from objects.platform import Platform
-                if isinstance(platform, Platform):
-                    self._resolve_platform(obj, phys, platform, was_grounded)
-
-            # Callbacks
-            if phys.is_grounded and not was_grounded and phys.on_landed:
-                phys.on_landed()
-            elif not phys.is_grounded and was_grounded and phys.on_fell:
-                phys.on_fell()
-
-    def _resolve_platform(
-        self, obj, phys: PhysicsComponent, platform, was_grounded: bool
-    ) -> None:
-        from objects.platform import Platform
-        p: Platform = platform
-
-        feet_y = obj.position.y
-        feet_x = obj.position.x
-        half_w = 16.0
-
-        in_x     = p.rect.x - half_w < feet_x < p.rect.x + p.rect.width + half_w
-        crossing = obj.prev_position.y <= p.rect.y <= feet_y
-
-        if p.one_way:
-            if phys.velocity.y >= 0 and crossing and in_x:
-                obj.position.y   = p.rect.y
-                phys.velocity.y  = 0.0
-                phys.is_grounded = True
-        else:
-            entity_rect = Rect2(feet_x - half_w, feet_y - 64, half_w * 2, 64)
-            if entity_rect.overlaps(p.rect):
-                if phys.velocity.y >= 0 and crossing and in_x:
-                    obj.position.y   = p.rect.y
-                    phys.velocity.y  = 0.0
-                    phys.is_grounded = True
+            # Jump arc: gravity pulls vz down; Z is clamped at ground (0)
+            if not grounded:
+                phys.vz -= phys.jump_gravity * dt
+            phys.z += phys.vz * dt
+            if phys.z <= 0.0:
+                phys.z  = 0.0
+                phys.vz = 0.0

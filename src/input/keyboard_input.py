@@ -30,10 +30,8 @@ class KeyboardInput(InputProvider):
 
     # Action → pygame key(s) that trigger it
     _ACTION_KEYS: dict[str, tuple[int, ...]] = {
-        "jump":         (pygame.K_SPACE, pygame.K_w, pygame.K_UP),
-        "attack_light": (pygame.K_z,),
-        "attack_heavy": (pygame.K_x,),
-        "use_item":     (pygame.K_f,),
+        "jump":   (pygame.K_k,),
+        "attack": (pygame.K_j,),
     }
 
     def __init__(self) -> None:
@@ -57,11 +55,9 @@ class KeyboardInput(InputProvider):
     def get_axis(self, axis: str) -> float:
         keys = pygame.key.get_pressed()
         if axis == "horizontal":
-            return float(keys[pygame.K_RIGHT] or keys[pygame.K_d]) \
-                 - float(keys[pygame.K_LEFT]  or keys[pygame.K_a])
+            return float(keys[pygame.K_d]) - float(keys[pygame.K_a])
         if axis == "vertical":
-            return float(keys[pygame.K_DOWN]  or keys[pygame.K_s]) \
-                 - float(keys[pygame.K_UP]    or keys[pygame.K_w])
+            return float(keys[pygame.K_s]) - float(keys[pygame.K_w])
         return 0.0
 
     def is_action_just_pressed(self, action: str) -> bool:

@@ -106,15 +106,6 @@ class StageManager:
                     asset_cache.load_atlas(data.sprite_atlas)
                     seen_atlases.add(data.sprite_atlas)
 
-        # Spawn platforms
-        from objects.platform import Platform
-        for p in stage.platforms:
-            scene.spawn(Platform(
-                f"plat_{p['x']}_{p['y']}",
-                Rect2(p["x"], p["y"], p["width"], p["height"]),
-                p.get("one_way", False),
-            ))
-
         # Spawn static pickups
         from objects.pickup import Pickup
         from data.item_data import ITEM_REGISTRY
@@ -140,6 +131,8 @@ class StageManager:
             "background":           stage.background,
             "music_track_override": stage.music_track_override,
             "scroll_limit_x":       stage.scroll_limit_x,
+            "ground_y_min":         stage.ground_y_min,
+            "ground_y_max":         stage.ground_y_max,
         })
 
     def _on_wave_complete(self, payload) -> None:

@@ -74,12 +74,10 @@ class PygameRenderer(IRenderer):
         if flip_x:
             sub = pygame.transform.flip(sub, True, False)
 
-        # Color modulation
+        # Color + alpha modulation via per-pixel multiply
         r, g, b, a = color_mod
-        sub.fill((r, g, b, 0), special_flags=pygame.BLEND_RGBA_MULT)
-
-        # Alpha
-        sub.set_alpha(int(alpha * a))
+        final_a = int(a * alpha)
+        sub.fill((r, g, b, final_a), special_flags=pygame.BLEND_RGBA_MULT)
 
         self._screen.blit(sub, (round(dst.x), round(dst.y)))
 

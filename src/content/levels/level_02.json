@@ -9,18 +9,11 @@
       "id": "factory_exterior",
       "display_name": "Factory Exterior",
       "background": "content/backgrounds/factory_01.png",
-      "entry_position": { "x": 80, "y": 340 },
-      "exit_position":  { "x": 1160, "y": 340 },
+      "entry_position": { "x": 80,   "y": 60 },
+      "exit_position":  { "x": 1160, "y": 60 },
       "scroll_limit_x": 1180,
-
-      "platforms": [
-        { "x": 0,    "y": 368, "width": 1280, "height": 32, "one_way": false },
-        { "x": 160,  "y": 296, "width": 80,   "height": 14, "one_way": true  },
-        { "x": 380,  "y": 280, "width": 112,  "height": 14, "one_way": true  },
-        { "x": 580,  "y": 264, "width": 96,   "height": 14, "one_way": true  },
-        { "x": 780,  "y": 280, "width": 112,  "height": 14, "one_way": true  },
-        { "x": 1000, "y": 296, "width": 96,   "height": 14, "one_way": true  }
-      ],
+      "ground_y_min": 0,
+      "ground_y_max": 120,
 
       "waves": [
         {
@@ -29,9 +22,9 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.25,
           "enemies": [
-            { "enemy_id": "grunt", "x": 380, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 440, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 420, "y": 272, "facing_right": false }
+            { "enemy_id": "grunt", "x": 380, "y": 50,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 440, "y": 90,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 420, "y": 70,  "facing_right": false }
           ]
         },
         {
@@ -40,10 +33,10 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.3,
           "enemies": [
-            { "enemy_id": "heavy", "x": 640, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 560, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 700, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 600, "y": 256, "facing_right": false }
+            { "enemy_id": "heavy", "x": 640, "y": 60,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 560, "y": 40,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 700, "y": 90,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 600, "y": 110, "facing_right": false }
           ]
         },
         {
@@ -52,10 +45,10 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.3,
           "enemies": [
-            { "enemy_id": "heavy", "x": 880, "y": 340, "facing_right": false },
-            { "enemy_id": "heavy", "x": 960, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 820, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 820, "y": 272, "facing_right": false }
+            { "enemy_id": "heavy", "x": 880, "y": 50,  "facing_right": false },
+            { "enemy_id": "heavy", "x": 960, "y": 90,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 820, "y": 70,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 820, "y": 100, "facing_right": false }
           ]
         },
         {
@@ -64,23 +57,23 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.4,
           "enemies": [
-            { "enemy_id": "grunt", "x": 1100, "y": 340, "facing_right": false },
-            { "enemy_id": "heavy", "x": 1160, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 1060, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 1100, "y": 288, "facing_right": false },
-            { "enemy_id": "grunt", "x": 1160, "y": 288, "facing_right": false }
+            { "enemy_id": "grunt", "x": 1100, "y": 50,  "facing_right": false },
+            { "enemy_id": "heavy", "x": 1160, "y": 80,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 1060, "y": 100, "facing_right": false },
+            { "enemy_id": "grunt", "x": 1100, "y": 40,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 1160, "y": 110, "facing_right": false }
           ]
         }
       ],
 
       "pickups": [
-        ["coin",          260,  348],
-        ["health_potion", 340,  348],
-        ["coin",          500,  348],
-        ["coin",          520,  348],
-        ["health_potion", 760,  348],
-        ["coin",          860,  348],
-        ["health_potion", 1040, 348]
+        ["coin",          260,  60],
+        ["health_potion", 340,  70],
+        ["coin",          500,  60],
+        ["coin",          520,  90],
+        ["health_potion", 760,  60],
+        ["coin",          860,  80],
+        ["health_potion", 1040, 60]
       ]
     },
 
@@ -88,18 +81,11 @@
       "id": "factory_floor",
       "display_name": "Factory Floor",
       "background": "content/backgrounds/factory_02.png",
-      "entry_position": { "x": 80, "y": 340 },
-      "exit_position":  { "x": 1180, "y": 340 },
+      "entry_position": { "x": 80,   "y": 60 },
+      "exit_position":  { "x": 1180, "y": 60 },
       "scroll_limit_x": 1200,
-
-      "platforms": [
-        { "x": 0,    "y": 368, "width": 1280, "height": 32, "one_way": false },
-        { "x": 100,  "y": 288, "width": 96,   "height": 14, "one_way": true  },
-        { "x": 300,  "y": 264, "width": 128,  "height": 14, "one_way": true  },
-        { "x": 560,  "y": 248, "width": 112,  "height": 14, "one_way": true  },
-        { "x": 800,  "y": 264, "width": 128,  "height": 14, "one_way": true  },
-        { "x": 1040, "y": 280, "width": 96,   "height": 14, "one_way": true  }
-      ],
+      "ground_y_min": 0,
+      "ground_y_max": 120,
 
       "waves": [
         {
@@ -108,10 +94,10 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.2,
           "enemies": [
-            { "enemy_id": "grunt", "x": 420, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 500, "y": 340, "facing_right": false },
-            { "enemy_id": "heavy", "x": 460, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 360, "y": 256, "facing_right": false }
+            { "enemy_id": "grunt", "x": 420, "y": 50,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 500, "y": 90,  "facing_right": false },
+            { "enemy_id": "heavy", "x": 460, "y": 70,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 360, "y": 110, "facing_right": false }
           ]
         },
         {
@@ -120,11 +106,11 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.25,
           "enemies": [
-            { "enemy_id": "heavy", "x": 720, "y": 340, "facing_right": false },
-            { "enemy_id": "heavy", "x": 820, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 660, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 640, "y": 240, "facing_right": false },
-            { "enemy_id": "grunt", "x": 760, "y": 240, "facing_right": false }
+            { "enemy_id": "heavy", "x": 720, "y": 60,  "facing_right": false },
+            { "enemy_id": "heavy", "x": 820, "y": 90,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 660, "y": 40,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 640, "y": 100, "facing_right": false },
+            { "enemy_id": "grunt", "x": 760, "y": 110, "facing_right": false }
           ]
         },
         {
@@ -133,25 +119,25 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.2,
           "enemies": [
-            { "enemy_id": "heavy", "x": 980,  "y": 340, "facing_right": false },
-            { "enemy_id": "heavy", "x": 1080, "y": 340, "facing_right": false },
-            { "enemy_id": "heavy", "x": 1160, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 920,  "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 1020, "y": 272, "facing_right": false },
-            { "enemy_id": "grunt", "x": 1120, "y": 272, "facing_right": false }
+            { "enemy_id": "heavy", "x": 980,  "y": 50,  "facing_right": false },
+            { "enemy_id": "heavy", "x": 1080, "y": 80,  "facing_right": false },
+            { "enemy_id": "heavy", "x": 1160, "y": 110, "facing_right": false },
+            { "enemy_id": "grunt", "x": 920,  "y": 70,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 1020, "y": 100, "facing_right": false },
+            { "enemy_id": "grunt", "x": 1120, "y": 40,  "facing_right": false }
           ]
         }
       ],
 
       "pickups": [
-        ["health_potion", 200,  348],
-        ["coin",          200,  280],
-        ["coin",          420,  348],
-        ["health_potion", 600,  348],
-        ["coin",          600,  240],
-        ["health_potion", 880,  348],
-        ["coin",          960,  348],
-        ["health_potion", 1160, 348]
+        ["health_potion", 200,  70],
+        ["coin",          200,  90],
+        ["coin",          420,  60],
+        ["health_potion", 600,  70],
+        ["coin",          600,  100],
+        ["health_potion", 880,  60],
+        ["coin",          960,  80],
+        ["health_potion", 1160, 60]
       ]
     },
 
@@ -160,16 +146,11 @@
       "display_name": "The Boss Arena",
       "background": "content/backgrounds/boss_arena.png",
       "music_track_override": "content/audio/boss.ogg",
-      "entry_position": { "x": 100, "y": 340 },
-      "exit_position":  { "x": 700, "y": 340 },
+      "entry_position": { "x": 100, "y": 60 },
+      "exit_position":  { "x": 700, "y": 60 },
       "scroll_limit_x": 750,
-
-      "platforms": [
-        { "x": 0,   "y": 368, "width": 800, "height": 32, "one_way": false },
-        { "x": 80,  "y": 296, "width": 80,  "height": 14, "one_way": true  },
-        { "x": 640, "y": 296, "width": 80,  "height": 14, "one_way": true  },
-        { "x": 300, "y": 264, "width": 200, "height": 14, "one_way": true  }
-      ],
+      "ground_y_min": 0,
+      "ground_y_max": 120,
 
       "waves": [
         {
@@ -178,17 +159,17 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.0,
           "enemies": [
-            { "enemy_id": "boss", "x": 500, "y": 340, "facing_right": false }
+            { "enemy_id": "boss", "x": 500, "y": 60, "facing_right": false }
           ]
         }
       ],
 
       "pickups": [
-        ["health_potion", 180, 348],
-        ["health_potion", 240, 348],
-        ["coin",          620, 348],
-        ["coin",          640, 348],
-        ["health_potion", 660, 348]
+        ["health_potion", 180, 70],
+        ["health_potion", 240, 90],
+        ["coin",          620, 60],
+        ["coin",          640, 80],
+        ["health_potion", 660, 60]
       ]
     }
   ]

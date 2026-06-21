@@ -9,17 +9,11 @@
       "id": "docks_entrance",
       "display_name": "Harbour Entrance",
       "background": "content/backgrounds/docks_01.png",
-      "entry_position": { "x": 80, "y": 340 },
-      "exit_position":  { "x": 1080, "y": 340 },
+      "entry_position": { "x": 80,   "y": 60 },
+      "exit_position":  { "x": 1080, "y": 60 },
       "scroll_limit_x": 1100,
-
-      "platforms": [
-        { "x": 0,    "y": 368, "width": 1200, "height": 32, "one_way": false },
-        { "x": 120,  "y": 300, "width": 96,   "height": 16, "one_way": true  },
-        { "x": 460,  "y": 288, "width": 112,  "height": 16, "one_way": true  },
-        { "x": 740,  "y": 308, "width": 80,   "height": 16, "one_way": true  },
-        { "x": 940,  "y": 280, "width": 96,   "height": 16, "one_way": true  }
-      ],
+      "ground_y_min": 0,
+      "ground_y_max": 120,
 
       "waves": [
         {
@@ -28,8 +22,8 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.3,
           "enemies": [
-            { "enemy_id": "grunt", "x": 380, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 460, "y": 340, "facing_right": false }
+            { "enemy_id": "grunt", "x": 380, "y": 50,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 460, "y": 80,  "facing_right": false }
           ]
         },
         {
@@ -38,9 +32,9 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.4,
           "enemies": [
-            { "enemy_id": "grunt", "x": 620, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 700, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 660, "y": 290, "facing_right": false }
+            { "enemy_id": "grunt", "x": 620, "y": 40,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 700, "y": 80,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 660, "y": 100, "facing_right": false }
           ]
         },
         {
@@ -49,18 +43,18 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.5,
           "enemies": [
-            { "enemy_id": "grunt", "x": 900, "y": 340, "facing_right": false },
-            { "enemy_id": "heavy", "x": 980, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 860, "y": 340, "facing_right": false }
+            { "enemy_id": "grunt", "x": 900, "y": 60,  "facing_right": false },
+            { "enemy_id": "heavy", "x": 980, "y": 90,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 860, "y": 40,  "facing_right": false }
           ]
         }
       ],
 
       "pickups": [
-        ["health_potion", 270, 348],
-        ["coin",          540, 348],
-        ["coin",          560, 348],
-        ["health_potion", 820, 348]
+        ["health_potion", 270, 70],
+        ["coin",          540, 60],
+        ["coin",          560, 80],
+        ["health_potion", 820, 60]
       ]
     },
 
@@ -68,18 +62,11 @@
       "id": "docks_warehouse",
       "display_name": "The Warehouse",
       "background": "content/backgrounds/docks_02.png",
-      "entry_position": { "x": 80, "y": 340 },
-      "exit_position":  { "x": 1140, "y": 340 },
+      "entry_position": { "x": 80,   "y": 60 },
+      "exit_position":  { "x": 1140, "y": 60 },
       "scroll_limit_x": 1160,
-
-      "platforms": [
-        { "x": 0,    "y": 368, "width": 1280, "height": 32, "one_way": false },
-        { "x": 80,   "y": 288, "width": 128,  "height": 16, "one_way": true  },
-        { "x": 320,  "y": 272, "width": 96,   "height": 16, "one_way": true  },
-        { "x": 560,  "y": 256, "width": 160,  "height": 16, "one_way": true  },
-        { "x": 840,  "y": 288, "width": 96,   "height": 16, "one_way": true  },
-        { "x": 1040, "y": 272, "width": 112,  "height": 16, "one_way": true  }
-      ],
+      "ground_y_min": 0,
+      "ground_y_max": 120,
 
       "waves": [
         {
@@ -88,9 +75,9 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.3,
           "enemies": [
-            { "enemy_id": "grunt", "x": 400, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 480, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 360, "y": 264, "facing_right": false }
+            { "enemy_id": "grunt", "x": 400, "y": 50,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 480, "y": 90,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 360, "y": 70,  "facing_right": false }
           ]
         },
         {
@@ -99,10 +86,10 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.4,
           "enemies": [
-            { "enemy_id": "heavy", "x": 680, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 740, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 620, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 600, "y": 248, "facing_right": false }
+            { "enemy_id": "heavy", "x": 680, "y": 60,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 740, "y": 40,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 620, "y": 90,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 600, "y": 110, "facing_right": false }
           ]
         },
         {
@@ -111,21 +98,21 @@
           "unlock_on_clear": true,
           "spawn_stagger": 0.5,
           "enemies": [
-            { "enemy_id": "heavy", "x": 960,  "y": 340, "facing_right": false },
-            { "enemy_id": "heavy", "x": 1060, "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 880,  "y": 340, "facing_right": false },
-            { "enemy_id": "grunt", "x": 880,  "y": 280, "facing_right": false }
+            { "enemy_id": "heavy", "x": 960,  "y": 50,  "facing_right": false },
+            { "enemy_id": "heavy", "x": 1060, "y": 90,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 880,  "y": 70,  "facing_right": false },
+            { "enemy_id": "grunt", "x": 880,  "y": 100, "facing_right": false }
           ]
         }
       ],
 
       "pickups": [
-        ["health_potion", 200,  348],
-        ["coin",          200,  278],
-        ["coin",          440,  348],
-        ["coin",          460,  348],
-        ["health_potion", 700,  348],
-        ["coin",          1000, 348]
+        ["health_potion", 200, 60],
+        ["coin",          200, 80],
+        ["coin",          440, 60],
+        ["coin",          460, 90],
+        ["health_potion", 700, 70],
+        ["coin",          1000, 60]
       ]
     }
   ]

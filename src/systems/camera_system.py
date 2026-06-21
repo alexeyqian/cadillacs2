@@ -64,14 +64,13 @@ class CameraSystem:
             facing = 1.0 if getattr(p, "facing_right", True) else -1.0
             avg_x += facing * self.lookahead_dist / len(alive)
 
-        # Smooth follow
+        # Only follow X — Y is depth in world space, not a scroll axis
         t = min(1.0, self.follow_speed * dt)
         camera.position.x += (avg_x - camera.position.x) * t
-        camera.position.y += (avg_y - camera.position.y) * t
 
         camera.clamp_to_bounds()
         camera.apply_shake(dt, self.trauma_decay)
-        
+
         # Enforce scroll lock
         if self._lock_x is not None:
             camera.position.x = min(camera.position.x, self._lock_x)

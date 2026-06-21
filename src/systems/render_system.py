@@ -121,6 +121,12 @@ class RenderSystem:
     Z_WORLD_UI   = 5
     Z_SCREEN_UI  = 10
 
+    # 2.5D ground strip constants (screen pixels)
+    GROUND_TOP_Y  = 200   # screen Y where world_y=0 (back) appears
+    GROUND_BOT_Y  = 410   # screen Y where world_y=WORLD_Y_MAX (front) appears
+    WORLD_Y_RANGE = 120.0 # must match physics_system.WORLD_Y_MAX
+    DEPTH_SCALE   = (GROUND_BOT_Y - GROUND_TOP_Y) / WORLD_Y_RANGE  # px per world-Y unit
+
     def __init__(self, renderer: IRenderer, asset_cache: AssetCache) -> None:
         self._r = renderer
         self.assets = asset_cache
@@ -139,6 +145,8 @@ class RenderSystem:
         if background and background in self.assets._handles:
             self._draw_background(background, camera)
 
+        self._draw_ground()
+
         self._draw_calls.clear()
 
         self._collect_shadows(scene, camera, alpha)
@@ -155,15 +163,10 @@ class RenderSystem:
         self._r.end_frame()
 
     def _draw_background(self, bg_path: str, camera: Camera) -> None:
-        """
-        Draw the stage background with horizontal parallax (0.4x camera speed).
-        Tiles horizontally if the image is narrower than the current view.
-        """
+        """Background drawn at top portion of screen, parallax 0.4x camera speed."""
         handle = self.assets.get(bg_path)
         bw, bh = handle.width, handle.height
-        # Background scrolls at 40% of camera speed for depth illusion
         offset_x = -camera.position.x * 0.4
-        # Ensure we start left of screen to avoid a gap on the left edge
         start_x = int(offset_x % bw) - bw
         x = start_x
         while x < self.screen_w:
@@ -173,6 +176,32 @@ class RenderSystem:
                 dst=Vec2(x, 0),
             )
             x += bw
+
+    def _draw_ground(self) -> None:
+        """Draw the walkable ground strip with subtle lane dividers."""
+        top = self.GROUND_TOP_Y
+        bot = self.GROUND_BOT_Y
+        h   = bot - top
+        # Ground fill — slightly lighter toward front for perspective feel
+        self._r.draw_rect(Rect2(0, top, self.screen_w, h), (72, 62, 50, 255))
+        # Lane dividers (2 lines dividing strip into 3 lanes)
+        lane_h = h / 3
+        for i in range(1, 3):
+            y = top + lane_h * i
+            self._r.draw_rect(Rect2(0, y, self.screen_w, 1), (90, 80, 65, 160))
+        # Front edge shadow
+        self._r.draw_rect(Rect2(0, bot, self.screen_w, 4), (30, 24, 18, 200))
+
+    def _world_to_screen(self, world_x: float, world_y: float, z: float,
+                         camera: Camera) -> Vec2:
+        """
+        2.5D projection:
+          screen_x = world_x - camera.x  (horizontal scroll only)
+          screen_y = GROUND_TOP + world_y * DEPTH_SCALE - z  (depth + jump lift)
+        """
+        sx = world_x - camera.position.x + self.screen_w / 2
+        sy = self.GROUND_TOP_Y + world_y * self.DEPTH_SCALE - z
+        return Vec2(sx, sy)
 
     def _interpolated_pos(self, obj, alpha: float) -> Vec2:
         prev = getattr(obj, "prev_position", obj.position)
@@ -190,21 +219,29 @@ class RenderSystem:
 
     def _collect_sprites(self, scene: Scene, camera: Camera, alpha: float) -> None:
         from components.sprite_component import SpriteComponent
-        from core.components import AnimationComponent
+        from core.components import AnimationComponent, PhysicsComponent
 
         for obj in scene.find_by_tag("renderable"):
             sprite = obj.get_component(SpriteComponent)
             if sprite is None or not obj.visible:
                 continue
             anim = obj.get_component(AnimationComponent)
-            draw_pos   = self._interpolated_pos(obj, alpha)
-            screen_pos = camera.world_to_screen(draw_pos, self.screen_w, self.screen_h)
-            screen_pos.x += sprite.draw_offset.x
-            screen_pos.y += sprite.draw_offset.y
+            phys = obj.get_component(PhysicsComponent)
+
+            draw_pos = self._interpolated_pos(obj, alpha)
+            # Interpolate Z for smooth jump arc
+            if phys is not None:
+                draw_z = phys.prev_z + (phys.z - phys.prev_z) * alpha
+            else:
+                draw_z = 0.0
+
+            base = self._world_to_screen(draw_pos.x, draw_pos.y, draw_z, camera)
+            screen_pos = Vec2(base.x + sprite.draw_offset.x,
+                              base.y + sprite.draw_offset.y)
             src = self._get_src_rect(sprite, anim)
             self._draw_calls.append(DrawCall(
                 z_index   = obj.transform.z_index or self.Z_WORLD,
-                sort_y    = draw_pos.y,
+                sort_y    = draw_pos.y,   # depth-sort: higher Y drawn on top
                 atlas     = sprite.atlas,
                 src_rect  = src,
                 dst_pos   = screen_pos,
@@ -220,14 +257,13 @@ class RenderSystem:
             shadow = obj.get_component(ShadowComponent)
             if shadow is None or not obj.visible:
                 continue
-            draw_pos   = self._interpolated_pos(obj, alpha)
-            w, h, a    = shadow.get_draw_params()
-            screen_pos = camera.world_to_screen(
-                Vec2(draw_pos.x, shadow.ground_y), self.screen_w, self.screen_h
-            )
+            draw_pos = self._interpolated_pos(obj, alpha)
+            w, h, a  = shadow.get_draw_params()
+            # Shadow always at ground level (z=0), no lift
+            screen_pos = self._world_to_screen(draw_pos.x, draw_pos.y, 0.0, camera)
             self._draw_calls.append(DrawCall(
                 z_index  = self.Z_SHADOW,
-                sort_y   = shadow.ground_y,
+                sort_y   = draw_pos.y,
                 atlas    = "__shadow__",
                 src_rect = Rect2(0, 0, w, h),
                 dst_pos  = screen_pos,
