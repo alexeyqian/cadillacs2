@@ -82,7 +82,8 @@ class StageData:
     entry_position:       Vec2      # where the player is placed on stage load
     exit_position:        Vec2      # where the exit trigger is placed
     scroll_limit_x:       float     # hard camera scroll limit for this stage
-    platforms:            list[dict]            = field(default_factory=list)
+    ground_y_min:         float                 = 0.0
+    ground_y_max:         float                 = 120.0
     waves:                list[WaveData]        = field(default_factory=list)
     pickups:              list[PickupPlacement] = field(default_factory=list)
     music_track_override: str | None            = None
@@ -114,7 +115,8 @@ def load_level(path: str | Path) -> LevelData:
             entry_position       = Vec2(ep["x"], ep["y"]),
             exit_position        = Vec2(xp["x"], xp["y"]),
             scroll_limit_x       = s["scroll_limit_x"],
-            platforms            = s.get("platforms", []),
+            ground_y_min         = float(s.get("ground_y_min", 0.0)),
+            ground_y_max         = float(s.get("ground_y_max", 120.0)),
             waves                = [WaveData.from_dict(w) for w in s.get("waves", [])],
             pickups              = [
                 PickupPlacement(item_id=p[0], x=p[1], y=p[2])

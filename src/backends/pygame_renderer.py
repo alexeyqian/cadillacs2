@@ -69,6 +69,9 @@ class PygameRenderer(IRenderer):
             return
 
         src_rect = pygame.Rect(src.x, src.y, src.width, src.height)
+        src_rect = src_rect.clip(surface.get_rect())
+        if src_rect.width == 0 or src_rect.height == 0:
+            return
         sub = surface.subsurface(src_rect).copy()
 
         if flip_x:

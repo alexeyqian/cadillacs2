@@ -79,6 +79,8 @@ class GameSession:
         self.level_manager = LevelManager(level_paths, self)
         self.audio         = AudioManager()   # public: main.py wires the backend
         self._current_bg   = ""              # set on every stage:started
+        self._ground_y_min = 0.0
+        self._ground_y_max = 120.0
 
         # ── Wire everything to the event bus ─────────────────
         self._camera_sys.on_attach(self.event_bus)
@@ -110,7 +112,7 @@ class GameSession:
     def update(self, dt: float) -> None:
         """Fixed-timestep update. Called at exactly 60 Hz by the game loop."""
         self.scene.update(dt)
-        self._physics_sys.update(dt, self.scene)
+        self._physics_sys.update(dt, self.scene, self._ground_y_min, self._ground_y_max)
         self.wave_manager.update(dt)
         self._camera_sys.update(dt, self.scene, self._camera)
 
@@ -124,7 +126,9 @@ class GameSession:
         self._base_music_track = payload.get("music_track", "")
 
     def _on_stage_started(self, payload: dict) -> None:
-        self._current_bg = payload.get("background", "")
+        self._current_bg   = payload.get("background", "")
+        self._ground_y_min = float(payload.get("ground_y_min", 0.0))
+        self._ground_y_max = float(payload.get("ground_y_max", 120.0))
 
         # Stage may override the level's music (e.g. boss arena)
         track = payload.get("music_track_override") or self._base_music_track
