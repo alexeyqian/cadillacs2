@@ -38,6 +38,10 @@ class LevelManager:
         from data.level_data import load_level
         path = self._levels[index]
         self._current = load_level(path)
+        self._session.event_bus.emit("level:started", {
+            "level_id":    self._current.id,
+            "music_track": self._current.music_track,
+        })
         self._session.stage_manager.load_stage(self._current.stages[0], stage_index=0)
 
     def _on_stage_complete(self, payload) -> None:

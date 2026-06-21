@@ -1,7 +1,7 @@
 # src/core/paths.py
 from pathlib import Path
 
-SRC_DIR     = Path(__file__).parent          # .../src/
+SRC_DIR     = Path(__file__).parent.parent   # .../src/  (file lives in src/core/)
 CONTENT_DIR = SRC_DIR / "content"            # .../src/content/
 SPRITES_DIR = CONTENT_DIR / "sprites"        # .../src/content/sprites/
 LEVELS_DIR  = CONTENT_DIR / "levels"         # .../src/content/levels/
