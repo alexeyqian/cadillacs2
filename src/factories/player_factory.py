@@ -12,6 +12,7 @@ from pathlib import Path
 
 from core.components import AnimationDef, CharacterStats
 from core.character import AttackDef
+from core.primitives import Rect2
 from core.player_enemy import Player
 from core.primitives import Vec2
 from components.sprite_component import SpriteComponent
@@ -38,6 +39,13 @@ class PlayerFactory:
             input_provider=input_provider,
             stats=stats,
             max_health=cfg["max_health"],
+        )
+
+        # Hurtbox — body rect in world XY (x=horizontal, y=depth offset)
+        hb = cfg.get("hurtbox", {})
+        player.collision.hurtbox = Rect2(
+            hb.get("x", -20), hb.get("y", -10),
+            hb.get("w", 40),  hb.get("h", 20),
         )
 
         # SpriteComponent — atlas + frame size + draw offset
@@ -72,6 +80,7 @@ class PlayerFactory:
 
         # Register attack definitions
         for atk in cfg["attacks"]:
+            hb = atk.get("hitbox", {})
             player.combat.register_attack(AttackDef(
                 id=atk["id"],
                 startup_frames=atk["startup_frames"],
@@ -79,6 +88,7 @@ class PlayerFactory:
                 recovery_frames=atk["recovery_frames"],
                 base_damage=atk["base_damage"],
                 knockback=Vec2(atk.get("kb_x", 0.0), atk.get("kb_y", 0.0)),
+                hitbox=Rect2(hb.get("x", 30), hb.get("y", -80), hb.get("w", 60), hb.get("h", 50)),
                 can_combo=atk.get("can_combo", True),
             ))
 

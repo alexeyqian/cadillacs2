@@ -7,6 +7,7 @@
   "frame_height": 256,
   "draw_offset_x": -96,
   "draw_offset_y": -256,
+  "hurtbox": { "x": -20, "y": -10, "w": 40, "h": 20 },
   "stats": {
     "move_speed": 220.0,
     "jump_force": 550.0,
@@ -48,7 +49,8 @@
       "base_damage": 10.0,
       "kb_x": 120.0,
       "kb_y": -80.0,
-      "can_combo": true
+      "can_combo": true,
+      "hitbox": { "x": 30, "y": -10, "w": 60, "h": 20 }
     },
     {
       "id": "heavy",
@@ -58,7 +60,8 @@
       "base_damage": 25.0,
       "kb_x": 200.0,
       "kb_y": -150.0,
-      "can_combo": false
+      "can_combo": false,
+      "hitbox": { "x": 25, "y": -12, "w": 80, "h": 24 }
     }
   ]
 }

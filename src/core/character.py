@@ -10,10 +10,10 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Callable
 
 from .game_object import GameObject
-from .primitives import Vec2
+from .primitives import Rect2, Vec2
 from .components import (
     AnimationComponent, CharacterStats, CollisionComponent,
-    DamageInfo, HealthComponent, PhysicsComponent,
+    DamageInfo, HealthComponent, HitboxDef, PhysicsComponent,
     StateMachineComponent, StatsComponent,
 )
 
@@ -31,6 +31,7 @@ class AttackDef:
     recovery_frames: int
     base_damage: float
     knockback: Vec2
+    hitbox: Rect2 = field(default_factory=lambda: Rect2(30, -80, 60, 50))
     animation: str | None = None
     can_combo: bool = True
 
@@ -83,6 +84,17 @@ class CombatComponent:
         self._current_atk = definition
         self._atk_phase = "startup"
         self._atk_timer = definition.startup_frames / _FIXED_FPS
+        # Upsert hitbox geometry into CollisionComponent so it's ready for activation
+        if self.owner:
+            col = self.owner.get_component(CollisionComponent)
+            if col:
+                col.hitboxes[definition.id] = HitboxDef(
+                    id=definition.id,
+                    rect=definition.hitbox,
+                    damage=definition.base_damage,
+                    knockback=definition.knockback,
+                    active=False,
+                )
         return True
 
     def update(self, dt: float) -> None:
@@ -100,9 +112,17 @@ class CombatComponent:
         if self._atk_phase == "startup":
             self._atk_phase = "active"
             self._atk_timer = self._current_atk.active_frames / _FIXED_FPS
+            if self.owner:
+                col = self.owner.get_component(CollisionComponent)
+                if col:
+                    col.activate_hitbox(self._current_atk.id)
         elif self._atk_phase == "active":
             self._atk_phase = "recovery"
             self._atk_timer = self._current_atk.recovery_frames / _FIXED_FPS
+            if self.owner:
+                col = self.owner.get_component(CollisionComponent)
+                if col:
+                    col.deactivate_all_hitboxes()
         elif self._atk_phase == "recovery":
             self._atk_phase = "idle"
             self._current_atk = None
