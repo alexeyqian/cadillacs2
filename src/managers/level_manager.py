@@ -1,114 +1,50 @@
 """
 managers/level_manager.py
 ==========================
-Loads LevelData from JSON, populates the scene, manages level transitions.
+LevelManager, StageManager, WaveManager.
+Data types (SpawnEntry, WaveData, StageData, LevelData) live in data/level_data.py.
+GameSession lives in game_session.py.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-import json
-from core.game_object import Scene
-from core.primitives import Rect2, Vec2, EventBus
-from core.player_enemy import Player
+from core.primitives import Rect2, Vec2
+from data.level_data import StageData, WaveData, SpawnEntry
 
-class GameSession:
-    """
-    Created once when the player starts a new game or continues.
-    Owns everything that must survive stage transitions.
-    """
-    player: Player            # ← player lives here
-    score: int
-    lives: int
-    current_level_index: int
-    current_stage_index: int
-    event_bus: EventBus
-    scene: Scene              # ← single scene, lives here too
+if TYPE_CHECKING:
+    from game_session import GameSession
 
-# data/level_data.py
-
-@dataclass
-class SpawnEntry:
-    """
-    One enemy to spawn as part of a wave.
-    Pure data — no behaviour, no references to runtime objects.
-    """
-    enemy_id:     str        # key into ENEMY_REGISTRY e.g. "grunt", "heavy", "boss"
-    x:            float      # world-space spawn position
-    y:            float      # world-space spawn position
-    facing_right: bool = False  # which direction the enemy faces on spawn
-
-@dataclass
-class WaveData:
-    trigger: str              # "on_enter_x:400" | "on_wave_clear:0"
-    enemies: list[SpawnEntry] # what spawns and where
-    camera_lock_x: float      # camera stops here until wave cleared
-    unlock_on_clear: bool     # advance camera when all enemies dead
-    spawn_stagger:   float = 0.0   # seconds between each enemy spawning in the wave
-
-    @classmethod
-    def from_dict(cls, d: dict) -> "WaveData":
-        return cls(
-            trigger         = d["trigger"],
-            camera_lock_x   = d["camera_lock_x"],
-            unlock_on_clear = d.get("unlock_on_clear", True),
-            spawn_stagger   = d.get("spawn_stagger", 0.0),
-            enemies         = [
-                SpawnEntry(
-                    enemy_id     = e["enemy_id"],
-                    x            = e["x"],
-                    y            = e["y"],
-                    facing_right = e.get("facing_right", False),
-                )
-                for e in d.get("enemies", [])
-            ],
-        )
-
-@dataclass
-class StageData:
-    id: str
-    background: str          # "docks_bg.png"
-    platforms: list[dict]
-    waves: list[WaveData]    # ← a stage owns multiple waves
-    scroll_limit_x: float    # camera stops scrolling until wave is cleared
-    exit_position: Vec2
-
-@dataclass
-class LevelData:
-    id: str
-    display_name: str        # "The Docks"
-    stages: list[StageData]  # ← a level owns multiple stages
-    music_track: str
 
 class LevelManager:
     """
     Owns level-to-level progression.
-    Loads LevelData JSON.
-    Signals StageManager to load the first stage.
-    Listens for 'stage:complete' to advance or end the level.
+    Loads LevelData JSON via load_level().
+    Delegates to StageManager for the first stage.
+    Listens for 'stage:complete' to advance stages or end the level.
     """
 
-    def __init__(self, level_paths: list[str], session: GameSession) -> None:
-        self._levels    = level_paths
-        self._session   = session
-        self._current: LevelData | None = None
-
-    def load_level(self, index: int) -> None:
-        path = self._levels[index]
-        with open(path) as f:
-            self._current = LevelData(**json.load(f))
-        self._session.stage_manager.load_stage(self._current.stages[0])
+    def __init__(self, level_paths: list[str], session: "GameSession") -> None:
+        self._levels  = level_paths
+        self._session = session
+        self._current = None
 
     def on_attach(self, bus) -> None:
         bus.on("stage:complete", self._on_stage_complete)
         bus.on("level:complete", self._on_level_complete)
 
+    def load_level(self, index: int) -> None:
+        from data.level_data import load_level
+        path = self._levels[index]
+        self._current = load_level(path)
+        self._session.stage_manager.load_stage(self._current.stages[0], stage_index=0)
+
     def _on_stage_complete(self, payload) -> None:
-        stage_idx = payload["stage_index"] + 1
-        if stage_idx < len(self._current.stages):
+        next_idx = payload["stage_index"] + 1
+        if next_idx < len(self._current.stages):
             self._session.stage_manager.load_stage(
-                self._current.stages[stage_idx]
+                self._current.stages[next_idx], stage_index=next_idx
             )
         else:
             self._session.event_bus.emit("level:complete", {
@@ -127,16 +63,18 @@ class LevelManager:
 class StageManager:
     """
     Owns stage-to-wave progression within a level.
-    Destroys old stage objects, populates new ones.
-    Signals WaveManager to start the first wave.
-    Listens for 'wave:complete' to advance.
+    Clears old stage objects, populates platforms and pickups,
+    places the player at entry_position, then hands waves to WaveManager.
     """
 
-    def __init__(self, session: GameSession, wave_manager: "WaveManager") -> None:
+    def __init__(self, session: "GameSession", wave_manager: "WaveManager") -> None:
         self._session      = session
         self._wave_manager = wave_manager
-        self._current: StageData | None = None
+        self._current:     StageData | None = None
         self._stage_index  = 0
+
+    def on_attach(self, bus) -> None:
+        bus.on("wave:complete", self._on_wave_complete)
 
     def load_stage(self, stage: StageData, stage_index: int = 0) -> None:
         self._current     = stage
@@ -144,50 +82,53 @@ class StageManager:
 
         scene = self._session.scene
 
-        # Destroy everything except the player
+        # Clear everything except the player
         for obj in list(scene.all_objects()):
             if not obj.has_tag("player"):
                 scene.destroy(obj)
-
-        # Force one scene tick to flush pending destroys
-        scene.update(0)
+        scene.update(0)  # flush pending destroys
 
         # Spawn platforms
         for p in stage.platforms:
             from objects.platform import Platform
-            from core.primitives import Rect2
             scene.spawn(Platform(
                 f"plat_{p['x']}_{p['y']}",
                 Rect2(p["x"], p["y"], p["width"], p["height"]),
                 p.get("one_way", False),
             ))
 
+        # Spawn static pickups
+        for pickup in stage.pickups:
+            from objects.pickup import Pickup
+            from data.item_data import ITEM_REGISTRY
+            item = ITEM_REGISTRY.get(pickup.item_id)
+            if item:
+                from objects.pickup import Pickup
+                scene.spawn(Pickup(
+                    f"pickup_{pickup.item_id}_{pickup.x}_{pickup.y}",
+                    item,
+                    Vec2(pickup.x, pickup.y),
+                ))
+
         # Place player at stage entry
         player = self._session.player
         if player:
-            player.position = Vec2(
-                stage.entry_position.x,
-                stage.entry_position.y,
-            )
+            player.position = Vec2(stage.entry_position.x, stage.entry_position.y)
 
-        # Start first wave
+        # Hand waves to WaveManager and emit stage started
         self._wave_manager.load_stage_waves(stage.waves)
-
         self._session.event_bus.emit("stage:started", {
-            "stage_id":    stage.id,
-            "stage_index": stage_index,
-            "background":  stage.background,
+            "stage_id":             stage.id,
+            "stage_index":          stage_index,
+            "background":           stage.background,
+            "music_track_override": stage.music_track_override,
+            "scroll_limit_x":       stage.scroll_limit_x,
         })
 
-    def on_attach(self, bus) -> None:
-        bus.on("wave:complete", self._on_wave_complete)
-
     def _on_wave_complete(self, payload) -> None:
-        # Unlock camera so player can advance to next trigger
         self._session.event_bus.emit("camera:unlock", {
             "stage_index": self._stage_index
         })
-
         if payload.get("all_waves_done"):
             self._session.event_bus.emit("stage:complete", {
                 "stage_index": self._stage_index
@@ -196,75 +137,90 @@ class StageManager:
 
 class WaveManager:
     """
-    Owns the current wave within a stage.
-    Watches for trigger conditions; spawns enemies; tracks kills.
-    Emits 'wave:complete' when all enemies in the wave are dead.
-    Emits 'stage:complete' (via StageManager) when the last wave clears.
+    Watches trigger conditions each update tick.
+    Spawns enemies (with optional stagger) when a trigger fires.
+    Tracks kills via 'object:died'; emits 'wave:complete' when cleared.
     """
 
-    def __init__(self, session: GameSession, enemy_factory) -> None:
+    def __init__(self, session: "GameSession", enemy_factory) -> None:
         self._session       = session
         self._enemy_factory = enemy_factory
-        self._waves:  list[WaveData] = []
+        self._waves:        list[WaveData] = []
         self._current_wave  = 0
-        self._alive:  set[str] = set()    # entity ids of living wave enemies
-        self._elapsed = 0.0
+        self._alive:        set[str] = set()
+        self._elapsed       = 0.0
+        self._stagger_queue: list[tuple[float, SpawnEntry]] = []  # (spawn_at_time, entry)
+
+    def on_attach(self, bus) -> None:
+        bus.on("object:died", self._on_enemy_died)
 
     def load_stage_waves(self, waves: list[WaveData]) -> None:
         self._waves        = waves
         self._current_wave = 0
         self._alive.clear()
         self._elapsed      = 0.0
-
-    def on_attach(self, bus) -> None:
-        bus.on("object:died", self._on_enemy_died)
-
-    def _on_enemy_died(self, payload) -> None:
-        obj = payload.get("object")
-        if obj and obj.id in self._alive:
-            self._alive.discard(obj.id)
-            if not self._alive:
-                self._advance_wave()
-
-    def _advance_wave(self) -> None:
-        self._current_wave += 1
-        all_done = self._current_wave >= len(self._waves)
-        self._session.event_bus.emit("wave:complete", {
-            "wave_index":    self._current_wave - 1,
-            "all_waves_done": all_done,
-        })
+        self._stagger_queue.clear()
 
     def update(self, dt: float) -> None:
         self._elapsed += dt
+
+        # Flush stagger queue
+        ready = [(t, e) for t, e in self._stagger_queue if self._elapsed >= t]
+        for t, entry in ready:
+            self._stagger_queue.remove((t, entry))
+            self._do_spawn(entry)
+
         if self._current_wave >= len(self._waves):
             return
 
         wave = self._waves[self._current_wave]
         players = self._session.scene.find_by_tag("player")
 
-        if self._check_trigger(wave.trigger, players):
+        if self._check_trigger(wave, players):
             self._spawn_wave(wave)
 
-    def _check_trigger(self, trigger: str, players: list) -> bool:
-        if trigger.startswith("on_enter_x:"):
-            x = float(trigger.split(":")[1])
+    def _check_trigger(self, wave: WaveData, players: list) -> bool:
+        t = wave.trigger
+        if t == "on_stage_start":
+            return True
+        if t.startswith("on_enter_x:"):
+            x = float(t.split(":")[1])
             return any(p.position.x >= x for p in players)
-        if trigger.startswith("on_timer:"):
-            return self._elapsed >= float(trigger.split(":")[1])
+        if t.startswith("on_timer:"):
+            return self._elapsed >= float(t.split(":")[1])
         return False
 
     def _spawn_wave(self, wave: WaveData) -> None:
-        # Lock camera at wave's scroll limit
-        self._session.event_bus.emit("camera:lock", {
-            "limit_x": wave.camera_lock_x
-        })
-        scene = self._session.scene
-        for entry in wave.enemies:
-            enemy = self._enemy_factory.create(
-                entry["enemy_id"],
-                Vec2(entry["x"], entry["y"]),
-            )
-            self._alive.add(enemy.id)
-            scene.spawn(enemy)
-        # Mark wave as spawned so trigger doesn't fire again
+        if wave.camera_lock_x is not None:
+            self._session.event_bus.emit("camera:lock", {
+                "limit_x": wave.camera_lock_x
+            })
+
+        for i, entry in enumerate(wave.enemies):
+            spawn_at = self._elapsed + i * wave.spawn_stagger
+            self._stagger_queue.append((spawn_at, entry))
+
+        # Mark wave consumed so trigger doesn't re-fire
         wave.trigger = "__spawned__"
+
+    def _do_spawn(self, entry: SpawnEntry) -> None:
+        enemy = self._enemy_factory.create(entry.enemy_id, Vec2(entry.x, entry.y))
+        if not entry.facing_right:
+            enemy.animation.set_facing(False)
+        self._alive.add(enemy.id)
+        self._session.scene.spawn(enemy)
+
+    def _on_enemy_died(self, payload) -> None:
+        obj = payload.get("object")
+        if obj and obj.id in self._alive:
+            self._alive.discard(obj.id)
+            if not self._alive and not self._stagger_queue:
+                self._advance_wave()
+
+    def _advance_wave(self) -> None:
+        self._current_wave += 1
+        all_done = self._current_wave >= len(self._waves)
+        self._session.event_bus.emit("wave:complete", {
+            "wave_index":     self._current_wave - 1,
+            "all_waves_done": all_done,
+        })
