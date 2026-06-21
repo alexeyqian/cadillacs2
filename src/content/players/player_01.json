@@ -1,0 +1,48 @@
+{
+  "id": "player_01",
+  "display_name": "Player",
+  "max_health": 100,
+  "sprite_atlas": "content/sprites/player.png",
+  "frame_width": 64,
+  "frame_height": 64,
+  "draw_offset_x": -32,
+  "draw_offset_y": -64,
+  "stats": {
+    "move_speed": 220.0,
+    "jump_force": 550.0,
+    "attack_power": 1.0,
+    "defense": 0.0,
+    "recovery_frames": 8
+  },
+  "animations": [
+    { "name": "idle",         "frame_count": 4,  "fps": 8.0,  "loop": true,  "sheet_row": 0 },
+    { "name": "walk",         "frame_count": 8,  "fps": 12.0, "loop": true,  "sheet_row": 1 },
+    { "name": "jump",         "frame_count": 3,  "fps": 10.0, "loop": false, "sheet_row": 2 },
+    { "name": "attack_light", "frame_count": 5,  "fps": 16.0, "loop": false, "sheet_row": 3 },
+    { "name": "attack_heavy", "frame_count": 7,  "fps": 14.0, "loop": false, "sheet_row": 4 },
+    { "name": "hurt",         "frame_count": 3,  "fps": 12.0, "loop": false, "sheet_row": 5 },
+    { "name": "die",          "frame_count": 6,  "fps": 10.0, "loop": false, "sheet_row": 6 }
+  ],
+  "attacks": [
+    {
+      "id": "light",
+      "startup_frames": 4,
+      "active_frames":  4,
+      "recovery_frames": 8,
+      "base_damage": 10.0,
+      "kb_x": 120.0,
+      "kb_y": -80.0,
+      "can_combo": true
+    },
+    {
+      "id": "heavy",
+      "startup_frames": 8,
+      "active_frames":  6,
+      "recovery_frames": 14,
+      "base_damage": 25.0,
+      "kb_x": 200.0,
+      "kb_y": -150.0,
+      "can_combo": false
+    }
+  ]
+}

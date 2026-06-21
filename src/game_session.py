@@ -77,14 +77,15 @@ class GameSession:
         self.wave_manager  = WaveManager(self, _enemy_factory)
         self.stage_manager = StageManager(self, self.wave_manager)
         self.level_manager = LevelManager(level_paths, self)
-        self._audio        = AudioManager()
+        self.audio         = AudioManager()   # public: main.py wires the backend
+        self._current_bg   = ""              # set on every stage:started
 
         # ── Wire everything to the event bus ─────────────────
         self._camera_sys.on_attach(self.event_bus)
         self.level_manager.on_attach(self.event_bus)
         self.stage_manager.on_attach(self.event_bus)
         self.wave_manager.on_attach(self.event_bus)
-        self._audio.on_attach(self.event_bus)
+        self.audio.on_attach(self.event_bus)
 
         self.event_bus.on("level:started",  self._on_level_started)
         self.event_bus.on("stage:started",  self._on_stage_started)
@@ -115,7 +116,7 @@ class GameSession:
 
     def draw(self, alpha: float) -> None:
         """Render-rate draw. alpha = leftover accumulator / FIXED_DT."""
-        self._render_sys.draw(self.scene, self._camera, alpha)
+        self._render_sys.draw(self.scene, self._camera, alpha, self._current_bg)
 
     # ── Event handlers ────────────────────────────────────────
 
@@ -123,10 +124,12 @@ class GameSession:
         self._base_music_track = payload.get("music_track", "")
 
     def _on_stage_started(self, payload: dict) -> None:
+        self._current_bg = payload.get("background", "")
+
         # Stage may override the level's music (e.g. boss arena)
         track = payload.get("music_track_override") or self._base_music_track
         if track:
-            self._audio.play_bgm(track)
+            self.audio.play_bgm(track)
 
         # Fit the camera bounds to this stage's scroll limit
         limit_x = payload.get("scroll_limit_x", 4000.0)

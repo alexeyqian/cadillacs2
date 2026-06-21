@@ -69,7 +69,7 @@ class PhysicsSystem:
         half_w = 16.0
 
         in_x     = p.rect.x - half_w < feet_x < p.rect.x + p.rect.width + half_w
-        crossing = obj.prev_position.y <= p.rect.y < feet_y
+        crossing = obj.prev_position.y <= p.rect.y <= feet_y
 
         if p.one_way:
             if phys.velocity.y >= 0 and crossing and in_x:

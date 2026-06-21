@@ -143,6 +143,20 @@ class Player(Character):
     def update(self, dt: float) -> None:
         self._process_input()
         super().update(dt)
+        self._drive_animation()
+
+    def _drive_animation(self) -> None:
+        if not self.is_alive:
+            self._animation.play("die")
+            return
+        if self._combat.is_attacking:
+            return  # CombatComponent drives attack animation
+        if not self._physics.is_grounded:
+            self._animation.play("jump")
+        elif abs(self._physics.velocity.x) > 1.0:
+            self._animation.play("walk")
+        else:
+            self._animation.play("idle")
 
     def _process_input(self) -> None:
         if not self.is_alive:

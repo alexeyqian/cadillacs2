@@ -2,9 +2,13 @@
 import pygame
 
 from backends.pygame_renderer import PygameRenderer
+from backends.pygame_audio import PygameAudio
 from systems.render_system import AssetCache
 from game_session import GameSession
-from core.paths import LEVELS_DIR
+from factories.player_factory import PlayerFactory
+from input.keyboard_input import KeyboardInput
+from components.sprite_component import SpriteComponent
+from core.paths import LEVELS_DIR, AUDIO_DIR
 
 SCREEN_W, SCREEN_H = 800, 450
 FIXED_DT            = 1 / 60
@@ -21,10 +25,15 @@ def main() -> None:
 
     session = GameSession(renderer, asset_cache, LEVEL_PATHS, lives=3)
 
-    # TODO Step 5 — PlayerFactory builds and injects the player:
-    # player = PlayerFactory.create(kb_input)
-    # session.player = player
-    # session.scene.spawn(player)
+    # Wire pygame audio backend into the manager
+    audio_backend = PygameAudio(sfx_dir=AUDIO_DIR)
+    session.audio.set_backends(audio_backend.play_sfx, audio_backend.play_bgm)
+
+    kb_input = KeyboardInput()
+    player   = PlayerFactory.create(kb_input)
+    session.asset_cache.load_atlas(player.get_component(SpriteComponent).atlas)
+    session.player = player
+    session.scene.spawn(player)
 
     session.start(level_index=0)
 

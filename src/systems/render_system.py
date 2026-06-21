@@ -128,13 +128,16 @@ class RenderSystem:
         self.screen_w = renderer.screen_width
         self.screen_h = renderer.screen_height
 
-    def draw(self, scene: Scene, camera: Camera, alpha: float) -> None:
+    def draw(self, scene: Scene, camera: Camera, alpha: float, background: str = "") -> None:
         """
         Main entry point. alpha = accumulator / FIXED_DT for interpolation.
         Call once per render frame (variable rate).
         """
         self._r.begin_frame()
-        self._r.clear((30,20,40,255)) # dark background
+        self._r.clear((30, 20, 40, 255))
+
+        if background and background in self.assets._handles:
+            self._draw_background(background, camera)
 
         self._draw_calls.clear()
 
@@ -150,6 +153,26 @@ class RenderSystem:
 
         self._draw_screen_ui(scene)
         self._r.end_frame()
+
+    def _draw_background(self, bg_path: str, camera: Camera) -> None:
+        """
+        Draw the stage background with horizontal parallax (0.4x camera speed).
+        Tiles horizontally if the image is narrower than the current view.
+        """
+        handle = self.assets.get(bg_path)
+        bw, bh = handle.width, handle.height
+        # Background scrolls at 40% of camera speed for depth illusion
+        offset_x = -camera.position.x * 0.4
+        # Ensure we start left of screen to avoid a gap on the left edge
+        start_x = int(offset_x % bw) - bw
+        x = start_x
+        while x < self.screen_w:
+            self._r.draw_texture(
+                handle=handle,
+                src=Rect2(0, 0, bw, bh),
+                dst=Vec2(x, 0),
+            )
+            x += bw
 
     def _interpolated_pos(self, obj, alpha: float) -> Vec2:
         prev = getattr(obj, "prev_position", obj.position)
