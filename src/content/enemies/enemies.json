@@ -1,0 +1,102 @@
+[
+  {
+    "id": "grunt",
+    "display_name": "Grunt",
+    "move_speed": 100.0,
+    "jump_force": 350.0,
+    "attack_power": 0.6,
+    "defense": 0.05,
+    "recovery_frames": 12,
+    "max_health": 80,
+    "ai_type": "brawler",
+    "xp_reward": 50,
+    "sprite_atlas": "content/sprites/grunt.png",
+    "death_vfx": "death_explosion",
+    "attacks": [
+      {
+        "id": "punch",
+        "startup_frames": 5,
+        "active_frames": 6,
+        "recovery_frames": 10,
+        "base_damage": 8.0,
+        "kb_x": 120.0,
+        "kb_y": -80.0,
+        "can_combo": true
+      }
+    ],
+    "drops": [
+      { "item_id": "coin",          "quantity": 3, "probability": 0.9 },
+      { "item_id": "health_potion", "quantity": 1, "probability": 0.2 }
+    ]
+  },
+  {
+    "id": "heavy",
+    "display_name": "Heavy",
+    "move_speed": 70.0,
+    "jump_force": 280.0,
+    "attack_power": 1.2,
+    "defense": 0.15,
+    "recovery_frames": 18,
+    "max_health": 160,
+    "ai_type": "brawler",
+    "xp_reward": 100,
+    "sprite_atlas": "content/sprites/heavy.png",
+    "death_vfx": "death_explosion",
+    "attacks": [
+      {
+        "id": "punch",
+        "startup_frames": 10,
+        "active_frames": 8,
+        "recovery_frames": 16,
+        "base_damage": 20.0,
+        "kb_x": 200.0,
+        "kb_y": -120.0,
+        "can_combo": false
+      }
+    ],
+    "drops": [
+      { "item_id": "coin",          "quantity": 8,  "probability": 0.95 },
+      { "item_id": "health_potion", "quantity": 1,  "probability": 0.4  }
+    ]
+  },
+  {
+    "id": "boss",
+    "display_name": "Big Boss",
+    "move_speed": 120.0,
+    "jump_force": 450.0,
+    "attack_power": 1.5,
+    "defense": 0.2,
+    "recovery_frames": 14,
+    "max_health": 500,
+    "ai_type": "boss",
+    "xp_reward": 500,
+    "sprite_atlas": "content/sprites/boss.png",
+    "death_vfx": "death_explosion",
+    "attacks": [
+      {
+        "id": "punch",
+        "startup_frames": 8,
+        "active_frames": 8,
+        "recovery_frames": 12,
+        "base_damage": 15.0,
+        "kb_x": 180.0,
+        "kb_y": -100.0,
+        "can_combo": true
+      },
+      {
+        "id": "slam",
+        "startup_frames": 16,
+        "active_frames": 10,
+        "recovery_frames": 20,
+        "base_damage": 35.0,
+        "kb_x": 300.0,
+        "kb_y": -200.0,
+        "can_combo": false
+      }
+    ],
+    "drops": [
+      { "item_id": "health_potion", "quantity": 3, "probability": 1.0 },
+      { "item_id": "coin",          "quantity": 30, "probability": 1.0 }
+    ]
+  }
+]
