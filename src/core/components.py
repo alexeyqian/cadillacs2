@@ -263,10 +263,18 @@ class StateMachineComponent(ComponentBase):
 @dataclass
 class AnimationDef:
     name: str
-    frame_count: int
-    fps: float
-    loop: bool
     sheet_row: int
+    loop: bool
+    # fps-based (locomotion animations)
+    frame_count: int = 0
+    fps: float = 0.0
+    # tick-based (attack animations) — each value is duration in 60 Hz logic ticks
+    # when set, frame_count is derived automatically and fps is ignored
+    frame_durations: list[int] | None = None
+
+    def __post_init__(self) -> None:
+        if self.frame_durations:
+            self.frame_count = len(self.frame_durations)
 
 
 class AnimationComponent(ComponentBase):
@@ -275,6 +283,7 @@ class AnimationComponent(ComponentBase):
         self._current: AnimationDef | None = None
         self._frame: int = 0
         self._elapsed: float = 0.0
+        self._tick: int = 0          # counts update() calls for tick-based anims
         self._playing: bool = False
         self._facing_right: bool = True
         self.on_animation_finished: Callable[[str], None] | None = None
@@ -304,6 +313,7 @@ class AnimationComponent(ComponentBase):
         self._current = anim
         self._frame = 0
         self._elapsed = 0.0
+        self._tick = 0
         self._playing = True
 
     def set_facing(self, right: bool) -> None:
@@ -312,8 +322,35 @@ class AnimationComponent(ComponentBase):
     def update(self, dt: float) -> None:
         if not self._playing or self._current is None:
             return
+
+        if self._current.frame_durations:
+            self._update_tick_based()
+        else:
+            self._update_fps_based(dt)
+
+    def _update_tick_based(self) -> None:
+        """Advance by one logic tick; map cumulative ticks to sprite frame."""
+        self._tick += 1
+        durations = self._current.frame_durations  # type: ignore[union-attr]
+        acc = 0
+        for i, dur in enumerate(durations):
+            acc += dur
+            if self._tick <= acc:
+                self._frame = i
+                return
+        # past the last frame
+        if self._current.loop:
+            self._tick = 0
+            self._frame = 0
+        else:
+            self._frame = len(durations) - 1
+            self._playing = False
+            if self.on_animation_finished:
+                self.on_animation_finished(self._current.name)
+
+    def _update_fps_based(self, dt: float) -> None:
         self._elapsed += dt
-        frame_dur = 1.0 / self._current.fps
+        frame_dur = 1.0 / self._current.fps  # type: ignore[operator]
         while self._elapsed >= frame_dur:
             self._elapsed -= frame_dur
             self._frame += 1

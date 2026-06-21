@@ -49,15 +49,25 @@ class PlayerFactory:
         )
         player.add_component(sprite)
 
-        # Register animations from config
+        # Register animations from config.
+        # Attack rows use frame_durations (tick-based); locomotion rows use fps.
         for anim in cfg["animations"]:
-            player.animation.register_animation(AnimationDef(
-                name=anim["name"],
-                frame_count=anim["frame_count"],
-                fps=anim["fps"],
-                loop=anim["loop"],
-                sheet_row=anim["sheet_row"],
-            ))
+            if "frame_durations" in anim:
+                defn = AnimationDef(
+                    name=anim["name"],
+                    sheet_row=anim["sheet_row"],
+                    loop=anim.get("loop", False),
+                    frame_durations=anim["frame_durations"],
+                )
+            else:
+                defn = AnimationDef(
+                    name=anim["name"],
+                    sheet_row=anim["sheet_row"],
+                    loop=anim.get("loop", True),
+                    frame_count=anim["frame_count"],
+                    fps=anim["fps"],
+                )
+            player.animation.register_animation(defn)
         player.animation.play("idle")
 
         # Register attack definitions
