@@ -4,7 +4,7 @@ from __future__ import annotations
 import pygame
 from systems.render_interface import IRenderer, TextureHandle
 from core.primitives import Rect2, Vec2
-from core.paths import SPRITES_DIR
+from core.paths import SRC_DIR
 from pathlib import Path
 
 
@@ -44,7 +44,7 @@ class PygameRenderer(IRenderer):
 
     def load_texture(self, path: str) -> TextureHandle:
         if path not in self._surfaces:
-            full = Path(path) if Path(path).is_absolute() else SPRITES_DIR / path
+            full = Path(path) if Path(path).is_absolute() else SRC_DIR / path
             surface = pygame.image.load(str(full)).convert_alpha()
             self._surfaces[path] = surface
         surface = self._surfaces[path]

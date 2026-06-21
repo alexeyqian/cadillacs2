@@ -1,0 +1,22 @@
+[
+  {
+    "id": "health_potion",
+    "name": "Health Potion",
+    "effect_type": "heal",
+    "effect_value": 30.0,
+    "effect_stat": "",
+    "duration": 0.0,
+    "sprite_atlas": "content/sprites/pickup_sparkle.png",
+    "pickup_sound": ""
+  },
+  {
+    "id": "coin",
+    "name": "Coin",
+    "effect_type": "score",
+    "effect_value": 100.0,
+    "effect_stat": "",
+    "duration": 0.0,
+    "sprite_atlas": "content/sprites/pickup_sparkle.png",
+    "pickup_sound": ""
+  }
+]

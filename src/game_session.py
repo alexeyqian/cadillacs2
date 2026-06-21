@@ -22,11 +22,13 @@ from __future__ import annotations
 
 from core.primitives import EventBus
 from core.game_object import Scene
-from data.enemy_data import EnemyFactory
+from core.paths import ENEMIES_DIR, ITEMS_DIR
+from data.enemy_data import EnemyFactory, load_enemies
+from data.item_data import load_items
 from managers.level_manager import LevelManager, StageManager, WaveManager
 from managers.audio_manager import AudioManager
 from systems.physics_system import PhysicsSystem
-from systems.render_system import RenderSystem, Camera
+from systems.render_system import RenderSystem, AssetCache, Camera
 from systems.camera_system import CameraSystem
 
 
@@ -45,9 +47,14 @@ class GameSession:
         level_paths: list[str],
         lives: int = 3,
     ) -> None:
+        # ── Load data registries (must happen before any factory use) ─
+        load_enemies(str(ENEMIES_DIR / "enemies.json"))
+        load_items(str(ITEMS_DIR / "items.json"))
+
         # ── Core runtime ──────────────────────────────────────
-        self.event_bus = EventBus()
-        self.scene     = Scene(self.event_bus)
+        self.event_bus  = EventBus()
+        self.scene      = Scene(self.event_bus)
+        self.asset_cache: AssetCache = asset_cache   # exposed so managers can preload
 
         # ── Player (set externally by PlayerFactory in Step 5) ─
         self.player = None
@@ -57,7 +64,7 @@ class GameSession:
         self.lives               = lives
         self.current_level_index = 0
         self.current_stage_index = 0
-        self._base_music_track   = ""   # updated on every level:started
+        self._base_music_track   = ""
 
         # ── Systems ───────────────────────────────────────────
         self._physics_sys = PhysicsSystem()
@@ -66,7 +73,7 @@ class GameSession:
         self._camera_sys  = CameraSystem(follow_speed=6.0)
 
         # ── Managers ──────────────────────────────────────────
-        _enemy_factory    = EnemyFactory()
+        _enemy_factory     = EnemyFactory()
         self.wave_manager  = WaveManager(self, _enemy_factory)
         self.stage_manager = StageManager(self, self.wave_manager)
         self.level_manager = LevelManager(level_paths, self)

@@ -117,17 +117,7 @@ class PhysicsComponent(ComponentBase):
         self.on_fell: Callable[[], None] | None = None
 
     def update(self, dt: float) -> None:
-        if self.immovable:
-            return
-        if not self.is_grounded:
-            self.velocity.y = min(self.velocity.y + self.gravity * dt, self.max_fall_speed)
-        if self.is_grounded:
-            self.velocity.x *= (1.0 - self.friction)
-            if abs(self.velocity.x) < 0.5:
-                self.velocity.x = 0.0
-        pos = self.owner.position
-        pos.x += self.velocity.x * dt
-        pos.y += self.velocity.y * dt
+        pass  # PhysicsSystem owns all integration; this component holds state only
 
     def apply_impulse(self, impulse: Vec2) -> None:
         self.velocity.x += impulse.x

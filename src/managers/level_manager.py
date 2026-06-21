@@ -84,7 +84,8 @@ class StageManager:
         self._current     = stage
         self._stage_index = stage_index
 
-        scene = self._session.scene
+        scene        = self._session.scene
+        asset_cache  = self._session.asset_cache
 
         # Clear everything except the player
         for obj in list(scene.all_objects()):
@@ -92,9 +93,22 @@ class StageManager:
                 scene.destroy(obj)
         scene.update(0)  # flush pending destroys
 
+        # Preload background atlas
+        asset_cache.load_atlas(stage.background)
+
+        # Preload atlases for every enemy type that appears in this stage's waves
+        from data.enemy_data import ENEMY_REGISTRY
+        seen_atlases: set[str] = set()
+        for wave in stage.waves:
+            for entry in wave.enemies:
+                data = ENEMY_REGISTRY.get(entry.enemy_id)
+                if data and data.sprite_atlas not in seen_atlases:
+                    asset_cache.load_atlas(data.sprite_atlas)
+                    seen_atlases.add(data.sprite_atlas)
+
         # Spawn platforms
+        from objects.platform import Platform
         for p in stage.platforms:
-            from objects.platform import Platform
             scene.spawn(Platform(
                 f"plat_{p['x']}_{p['y']}",
                 Rect2(p["x"], p["y"], p["width"], p["height"]),
@@ -102,12 +116,11 @@ class StageManager:
             ))
 
         # Spawn static pickups
+        from objects.pickup import Pickup
+        from data.item_data import ITEM_REGISTRY
         for pickup in stage.pickups:
-            from objects.pickup import Pickup
-            from data.item_data import ITEM_REGISTRY
             item = ITEM_REGISTRY.get(pickup.item_id)
             if item:
-                from objects.pickup import Pickup
                 scene.spawn(Pickup(
                     f"pickup_{pickup.item_id}_{pickup.x}_{pickup.y}",
                     item,
