@@ -1,0 +1,13 @@
+{
+  "id": "level_01",
+  "required_atlases": [
+    "content/sprites/player.png",
+    "content/sprites/grunt.png",
+    "content/sprites/heavy.png",
+    "content/sprites/hit_spark.png",
+    "content/sprites/death_explosion.png",
+    "content/sprites/combo_burst.png",
+    "content/sprites/pickup_sparkle.png",
+    "content/sprites/shadow.png"
+  ],
+}

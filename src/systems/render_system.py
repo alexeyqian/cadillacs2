@@ -11,6 +11,10 @@ from dataclasses import dataclass, field
 from core.game_object import Scene
 from core.primitives import Vec2, Rect2
 
+import pygame
+from pathlib import Path
+from core.paths import SPRITES_DIR
+from systems.render_interface import IRenderer, TextureHandle
 
 @dataclass
 class Camera:
@@ -62,22 +66,31 @@ class AssetCache:
     via load_atlas() so _submit() never touches the file system.
     """
 
-    def __init__(self) -> None:
-        self._textures: dict[str, object] = {}
+    def __init__(self, renderer: IRenderer) -> None:
+        self._renderer = renderer
+        # _handles = _textures
+        self._handles: dict[str, TextureHandle] = {}
 
-    def load_atlas(self, path: str, backend_load_fn) -> None:
-        """backend_load_fn: e.g. pygame.image.load"""
-        if path not in self._textures:
-            self._textures[path] = backend_load_fn(path)
+    def load_atlas(self, path: str) -> None:
+        """Pre-load one atlas. Call at level start, never mid-frame."""
+        if path not in self._handles:
+            self._handles[path] = self._renderer.load_texture(path)
+            
+    def preload_all(self, paths: list[str]) -> None:
+        """Load a batch of atlases at once — call during level loading screen."""
+        for path in paths:
+            self.load_atlas(path)
 
-    def get(self, path: str) -> object:
-        tex = self._textures.get(path)
-        if tex is None:
+    def get(self, path: str) -> TextureHandle:
+        handle = self._handles.get(path)
+        if handle is None:
             raise KeyError(f"Atlas not pre-loaded: {path!r}")
-        return tex
+        return handle
 
     def unload(self, path: str) -> None:
-        self._textures.pop(path, None)
+        handle = self._handles.pop(path, None)
+        if handle:
+            self._renderer.unload_texture(handle)
 
 
 class RenderSystem:
@@ -108,17 +121,21 @@ class RenderSystem:
     Z_WORLD_UI   = 5
     Z_SCREEN_UI  = 10
 
-    def __init__(self, screen_w: int, screen_h: int, asset_cache: AssetCache) -> None:
-        self.screen_w = screen_w
-        self.screen_h = screen_h
+    def __init__(self, renderer: IRenderer, asset_cache: AssetCache) -> None:
+        self._r = renderer
         self.assets = asset_cache
         self._draw_calls: list[DrawCall] = []
+        self.screen_w = renderer.screen_width
+        self.screen_h = renderer.screen_height
 
     def draw(self, scene: Scene, camera: Camera, alpha: float) -> None:
         """
         Main entry point. alpha = accumulator / FIXED_DT for interpolation.
         Call once per render frame (variable rate).
         """
+        self._r.begin_frame()
+        self._r.clear((30,20,40,255)) # dark background
+
         self._draw_calls.clear()
 
         self._collect_shadows(scene, camera, alpha)
@@ -132,6 +149,7 @@ class RenderSystem:
             self._submit(call)
 
         self._draw_screen_ui(scene)
+        self._r.end_frame()
 
     def _interpolated_pos(self, obj, alpha: float) -> Vec2:
         prev = getattr(obj, "prev_position", obj.position)
@@ -222,4 +240,29 @@ class RenderSystem:
                     area=(call.src_rect.x, call.src_rect.y,
                           call.src_rect.width, call.src_rect.height))
         """
-        pass   # replace with backend-specific draw call
+        if call.atlas == "__shadow__":
+            # Sentinel: draw an ellipse, not a texture
+            self._r.draw_ellipse(
+                center=call.dst_pos,
+                rx=call.src_rect.width / 2,
+                ry=call.src_rect.height / 2,
+                color=(0, 0, 0, int(call.alpha * 120)),
+            )
+        elif call.atlas == "__rect__":
+            # Sentinel: UI bars drawn as plain rects
+            self._r.draw_rect(
+                Rect2(call.dst_pos.x, call.dst_pos.y,
+                      call.src_rect.width, call.src_rect.height),
+                color=(*call.color_mod[:3], int(call.alpha * call.color_mod[3])),
+                filled=True,
+            )
+        else:
+            handle = self.assets.get(call.atlas)
+            self._r.draw_texture(
+                handle=handle,
+                src=call.src_rect,
+                dst=call.dst_pos,
+                flip_x=call.flip_x,
+                color_mod=call.color_mod,
+                alpha=call.alpha,
+            )

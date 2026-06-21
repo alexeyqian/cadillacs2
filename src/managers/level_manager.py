@@ -25,12 +25,14 @@ class LevelManager:
     """
 
     def __init__(self, level_paths: list[str]) -> None:
-        self.level_paths   = level_paths
-        self.current_index = 0
-        self._bus          = None
+        self.level_paths         = level_paths
+        self.current_index       = 0
+        self._bus                = None
         self._scene: Scene | None = None
-        self._spawn_system = None
-        self._enemy_factory = None
+        self._spawn_system       = None
+        self._enemy_factory      = None
+        self._current_level_data = None
+        self._asset_cache        = None
 
     def on_attach(self, bus, scene: Scene, spawn_system=None, enemy_factory=None) -> None:
         self._bus           = bus
@@ -48,6 +50,10 @@ class LevelManager:
         self._load(path)
 
     def _on_level_exit(self, payload) -> None:
+        # Unload previous level's atlases before loading next
+        if self._current_level_data and self._asset_cache:
+            for atlas in self._current_level_data.required_atlases:
+                self._asset_cache.unload(atlas)
         self.current_index += 1
         if self._bus:
             self._bus.emit("level:complete", {"level_id": str(self.current_index - 1)})
@@ -62,6 +68,10 @@ class LevelManager:
             return
 
         level = LevelData(**raw)
+
+        # Preload all atlases this level needs before spawning anything
+        if self._asset_cache:
+            self._asset_cache.preload_all(level.required_atlases)
 
         if self._scene is None:
             return
